@@ -1,0 +1,31 @@
+{
+  "name": "lyra-server",
+  "version": "1.0.0",
+  "description": "Server for Lyra",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LenKagamine/lyra-server.git"
+  },
+  "author": "Michael Kim <micklepickle98@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LenKagamine/lyra-server/issues"
+  },
+  "homepage": "https://github.com/LenKagamine/lyra-server#readme",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "googleapis": "^41.0.0",
+    "he": "^1.2.0",
+    "ytdl-core": "^0.29.7"
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1",
+    "nodemon": "^1.19.1"
+  }
+}
