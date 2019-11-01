@@ -1,4 +1,4 @@
-// Route: /yt/url
+// Route: /yt/query
 // Params:
 // - options: JSON string of options
 // Response:
