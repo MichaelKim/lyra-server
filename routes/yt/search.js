@@ -9,6 +9,8 @@ const ytdl = require('ytdl-core');
 const ytsr = require('ytsr');
 const router = require('express').Router();
 
+const { readableViews } = require('../util');
+
 router.get('/', async (req, res) => {
   const { query } = req.query;
   console.log('searching for', query);
@@ -27,36 +29,41 @@ router.get('/', async (req, res) => {
   });
   console.log('search:', search.items.length);
 
-  const videos = search.items
-    .map(item => ({
-      id: item.link.substr(item.link.lastIndexOf('=') + 1),
+  const ids = new Set();
+  const promises = search.items.map(async item => {
+    const id = item.link.substr(item.link.lastIndexOf('=') + 1);
+
+    // Videos can appear more than once, remove duplicates based on video id
+    if (ids.has(id)) return;
+    ids.add(id);
+
+    const info = await ytdl.getBasicInfo(id);
+
+    // This should be guaranteed to work
+    const views = readableViews(
+      Number(info.player_response.videoDetails.viewCount) || 0
+    );
+
+    return {
+      id,
       title: he.decode(item.title),
       artist: item.author.name,
       thumbnail: {
         url: item.thumbnail,
         width: 120,
         height: 90
-      }
-    }))
-    .filter(
-      (item, index, items) => items.findIndex(i => i.id === item.id) === index
-    );
+      },
+      playlists: [],
+      date: Date.now(),
+      source: 'YOUTUBE',
+      url: info.video_id,
+      duration: info.length_seconds,
+      views
+    };
+  });
 
-  console.log('videos:', videos.length);
-
-  const infos = await Promise.all(videos.map(v => ytdl.getInfo(v.id)));
-  console.log('infos:', infos.length);
-  const videosongs = videos.map((v, i) => ({
-    ...v,
-    playlists: [],
-    date: Date.now(),
-    source: 'YOUTUBE',
-    url: v.id,
-    duration: infos[i].length_seconds,
-    views: infos[i].player_response.videoDetails.viewCount
-  }));
-
-  res.send(videosongs);
+  const videosongs = await Promise.all(promises);
+  res.send(videosongs.filter(Boolean));
 });
 
 module.exports = router;

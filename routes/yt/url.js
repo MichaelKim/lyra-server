@@ -19,12 +19,12 @@ router.get('/', async (req, res) => {
 
   // MacOS: doesn't support opus audio format
   const format = ytdl.chooseFormat(info.formats, {
-    // quality: 'highestaudio'
-    filter: format =>
-      !format.bitrate &&
-      format.audioBitrate &&
-      format.audioEncoding != null &&
-      format.audioEncoding !== 'opus'
+    quality: 'highestaudio'
+    // filter: format =>
+    //   !format.bitrate &&
+    //   format.audioBitrate &&
+    //   format.audioEncoding != null &&
+    //   format.audioEncoding !== 'opus'
   });
 
   res.send(format.url);
