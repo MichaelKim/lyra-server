@@ -3,7 +3,7 @@ const ytdl = require('ytdl-core');
 const ytsr = require('ytsr');
 const { google } = require('googleapis');
 
-const { readableViews } = require('../util');
+const { readableViews, parseDuration } = require('../util');
 
 const youtube = google.youtube({
   version: 'v3',
@@ -57,6 +57,7 @@ async function ytQuery(options, api = false) {
   }
 
   // This doesn't always work, but avoids making an API call
+  // TODO: see if this can be changed to ytdl.getBasicInfo
   const infos = await Promise.all(videos.map(v => ytdl.getInfo(v.id)));
   return videos.map((v, i) => ({
     ...v,
@@ -71,9 +72,12 @@ async function ytQuery(options, api = false) {
 
 async function ytSearch(keyword, api = false) {
   if (api) {
-    return ytQuery({
-      q: keyword
-    });
+    return ytQuery(
+      {
+        q: keyword
+      },
+      api
+    );
   }
 
   // Alternative using ytsr
@@ -132,9 +136,12 @@ async function ytSearch(keyword, api = false) {
 
 async function getRelatedVideos(id, api = false) {
   if (api) {
-    return ytQuery({
-      relatedToVideoId: id
-    });
+    return ytQuery(
+      {
+        relatedToVideoId: id
+      },
+      api
+    );
   }
 
   // Alternative using ytdl

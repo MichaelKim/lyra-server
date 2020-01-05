@@ -18,6 +18,21 @@ function readableViews(viewCount) {
   );
 }
 
+// Format: PT1H2M34S
+function parseDuration(iso) {
+  const matches = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (matches == null) {
+    return 0;
+  }
+
+  return (
+    Number(matches[1] || 0) * 3600 +
+    Number(matches[2] || 0) * 60 +
+    Number(matches[3] || 0)
+  );
+}
+
 module.exports = {
-  readableViews
+  readableViews,
+  parseDuration
 };
