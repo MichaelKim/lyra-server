@@ -51,6 +51,10 @@ async function ytQuery(options, api = false) {
 
     return videos.map((v, i) => ({
       ...v,
+      playlists: [],
+      date: Date.now(),
+      source: 'YOUTUBE',
+      url: v.id,
       duration: parseDuration(res2.data.items[i].contentDetails.duration),
       views: res2.data.items[i].statistics.viewCount
     }));
