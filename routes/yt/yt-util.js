@@ -56,7 +56,7 @@ async function ytQuery(options, api = false) {
       source: 'YOUTUBE',
       url: v.id,
       duration: parseDuration(res2.data.items[i].contentDetails.duration),
-      views: res2.data.items[i].statistics.viewCount
+      views: readableViews(Number(res2.data.items[i].statistics.viewCount) || 0)
     }));
   }
 
@@ -70,7 +70,9 @@ async function ytQuery(options, api = false) {
     source: 'YOUTUBE',
     url: v.id,
     duration: infos[i].length_seconds,
-    views: infos[i].player_response.videoDetails.viewCount
+    views: readableViews(
+      Number(infos[i].player_response.videoDetails.viewCount) || 0
+    )
   }));
 }
 
