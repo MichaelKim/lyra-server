@@ -21,6 +21,7 @@
     "express": "^4.17.1",
     "googleapis": "^41.0.0",
     "he": "^1.2.0",
+    "node-fetch": "^2.6.0",
     "ytdl-core": "^1.0.5",
     "ytsr": "^0.1.9"
   },
