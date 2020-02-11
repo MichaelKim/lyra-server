@@ -113,6 +113,11 @@ async function ytSearch(keyword, api = false) {
 
     const info = await ytdl.getBasicInfo(id);
 
+    if (info.length_seconds === 0) {
+      // Probably a live stream
+      return;
+    }
+
     // This should be guaranteed to work
     const views = readableViews(
       Number(info.player_response.videoDetails.viewCount) || 0
@@ -153,13 +158,15 @@ async function getRelatedVideos(id, api = false) {
   // Alternative using ytdl
   const { related_videos } = await ytdl.getBasicInfo(id);
 
+  const nonLiveVideos = related_videos.filter(v => v.length_seconds > 0);
+
   // related_videos has nearly almost enough information to fill out a VideoSong
   // There are two missing parts:
   // - The thumbnail only has the url, but we don't need the dimensions to display it properly
   // - The viewcount sometimes will be formed like "12M" or "53K"
   // This is faster than having to do another getBasicInfo() to get the proper view count
 
-  return related_videos.map(v => {
+  return nonLiveVideos.map(v => {
     let views = Number(v.view_count.replace(/,/g, ''));
     if (!views) {
       const size = v.view_count[v.view_count.length - 1];
