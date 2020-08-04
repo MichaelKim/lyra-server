@@ -69,7 +69,7 @@ async function ytQuery(options, api = false) {
     date: Date.now(),
     source: 'YOUTUBE',
     url: v.id,
-    duration: infos[i].length_seconds,
+    duration: infos[i].videoDetails.lengthSeconds,
     views: readableViews(
       Number(infos[i].player_response.videoDetails.viewCount) || 0
     )
@@ -113,7 +113,7 @@ async function ytSearch(keyword, api = false) {
 
     const info = await ytdl.getBasicInfo(id);
 
-    if (info.length_seconds === 0) {
+    if (info.videoDetails.lengthSeconds === 0) {
       // Probably a live stream
       return;
     }
@@ -135,8 +135,8 @@ async function ytSearch(keyword, api = false) {
       playlists: [],
       date: Date.now(),
       source: 'YOUTUBE',
-      url: info.video_id,
-      duration: info.length_seconds,
+      url: info.videoDetails.videoId,
+      duration: info.videoDetails.lengthSeconds,
       views
     };
   });
