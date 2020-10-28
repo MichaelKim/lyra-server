@@ -129,6 +129,7 @@ async function ytSearch(keyword, api = false) {
       artist: item.author.name,
       thumbnail: {
         url: item.thumbnail,
+        // TODO: fix thumbnail size
         width: 120,
         height: 90
       },
@@ -185,7 +186,7 @@ async function getRelatedVideos(id, api = false) {
       date: Date.now(),
       source: 'YOUTUBE',
       url: v.id,
-      views: views ? readableViews(views) : '',
+      views: readableViews(views || 0),
       thumbnail: {
         url: v.video_thumbnail,
         width: 120,
