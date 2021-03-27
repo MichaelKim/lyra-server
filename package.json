@@ -20,16 +20,16 @@
   "dependencies": {
     "compression": "^1.7.4",
     "express": "^4.17.1",
-    "googleapis": "^60.0.0",
+    "googleapis": "^68.0.0",
     "he": "^1.2.0",
     "node-fetch": "^2.6.1",
-    "ytdl-core": "^4.0.0",
-    "ytsr": "^1.0.4"
+    "ytdl-core": "^4.5.0",
+    "ytsr": "^3.3.1"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
-    "eslint": "^7.6.0",
-    "nodemon": "^2.0.4"
+    "eslint": "^7.22.0",
+    "nodemon": "^2.0.7"
   },
   "engines": {
     "node": ">=12.0.0"

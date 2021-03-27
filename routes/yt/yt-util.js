@@ -88,24 +88,18 @@ async function ytSearch(keyword, api = false) {
 
   // Alternative using ytsr
   const filters = await ytsr.getFilters(keyword);
-  const typeFilters = filters.get('Type');
-  if (typeFilters == null) {
-    return [];
-  }
-
-  const filter = typeFilters.find(f => f.name === 'Video');
+  const filter = filters.get('Type').get('Video');
   if (filter == null) {
     return [];
   }
 
-  const search = await ytsr(keyword, {
-    limit: 25,
-    nextpageRef: filter.ref
+  const search = await ytsr(filter.url, {
+    limit: 25
   });
 
   const ids = new Set();
   const promises = search.items.map(async item => {
-    const id = item.link.substr(item.link.lastIndexOf('=') + 1);
+    const id = item.url.substr(item.url.lastIndexOf('=') + 1);
 
     // Videos can appear more than once, remove duplicates based on video id
     if (ids.has(id)) return;
@@ -127,12 +121,7 @@ async function ytSearch(keyword, api = false) {
       id,
       title: he.decode(item.title),
       artist: item.author.name,
-      thumbnail: {
-        url: item.thumbnail,
-        // TODO: fix thumbnail size
-        width: 120,
-        height: 90
-      },
+      thumbnail: item.bestThumbnail,
       playlists: [],
       date: Date.now(),
       source: 'YOUTUBE',
@@ -180,7 +169,7 @@ async function getRelatedVideos(id, api = false) {
     return {
       id: v.id,
       title: v.title,
-      artist: v.author,
+      artist: v.author.name,
       duration: v.length_seconds,
       playlists: [],
       date: Date.now(),
@@ -188,7 +177,7 @@ async function getRelatedVideos(id, api = false) {
       url: v.id,
       views: readableViews(views || 0),
       thumbnail: {
-        url: v.video_thumbnail,
+        url: v.thumbnails[0]?.url ?? '',
         width: 120,
         height: 90
       }
