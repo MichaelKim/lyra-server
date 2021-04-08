@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "module": "CommonJS",
+    "strict": true,
+    "target": "esnext"
+  },
+  "exclude": ["node_modules"]
+}

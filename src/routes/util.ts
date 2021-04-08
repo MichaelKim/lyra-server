@@ -1,4 +1,4 @@
-function readableViews(viewCount) {
+export function readableViews(viewCount: number) {
   const length = 0 | Math.log10(viewCount);
 
   if (length < 3) return '' + viewCount;
@@ -19,7 +19,7 @@ function readableViews(viewCount) {
 }
 
 // Format: PT1H2M34S
-function parseDuration(iso) {
+export function parseDuration(iso: string) {
   const matches = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (matches == null) {
     return 0;
@@ -31,8 +31,3 @@ function parseDuration(iso) {
     Number(matches[3] || 0)
   );
 }
-
-module.exports = {
-  readableViews,
-  parseDuration
-};

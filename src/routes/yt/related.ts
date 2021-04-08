@@ -4,18 +4,30 @@
 // Response:
 // - JSON string of VideoSong[]
 
-const router = require('express').Router();
+import express from 'express';
+import { Request } from '../../types';
+import { getRelatedVideos } from './yt-util';
 
-const { getRelatedVideos } = require('./yt-util');
+const router = express.Router();
 
-router.get('/', async (req, res) => {
+type Query = {
+  id: string;
+  api: '' | '1';
+};
+
+router.get('/', async (req: Request<Query>, res) => {
   const { id, api } = req.query;
 
-  const videos = await getRelatedVideos(id, api);
+  if (id == null) {
+    res.send([]);
+    return;
+  }
+
+  const videos = await getRelatedVideos(id, api === '1');
   res.send(videos);
 });
 
-module.exports = router;
+export default router;
 
 // Old method:
 // const { related_videos } = await ytdl.getInfo(id);

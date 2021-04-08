@@ -4,13 +4,16 @@
 // Response:
 // - JSON string of string[] (suggestions)
 
-const router = require('express').Router();
-const fetch = require('node-fetch');
+import express from 'express';
+import fetch from 'node-fetch';
+import { Request } from '../../types';
+
+const router = express.Router();
 
 const YT_SUGGEST_URL =
   'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=';
 
-async function ytSuggest(query, api = false) {
+async function ytSuggest(query: string, api = false) {
   if (!query) return [];
 
   const url = YT_SUGGEST_URL + query.trim().replace(/\s+/, '+');
@@ -22,11 +25,21 @@ async function ytSuggest(query, api = false) {
   return body[1];
 }
 
-router.get('/', async (req, res) => {
+type Query = {
+  query: string;
+  api: '' | '1';
+};
+
+router.get('/', async (req: Request<Query>, res) => {
   const { query, api } = req.query;
 
-  const suggestions = await ytSuggest(query, api);
+  if (query == null) {
+    res.send([]);
+    return;
+  }
+
+  const suggestions = await ytSuggest(query, api === '1');
   res.send(suggestions);
 });
 
-module.exports = router;
+export default router;

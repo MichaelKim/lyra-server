@@ -1,16 +1,16 @@
-const he = require('he');
-const ytdl = require('ytdl-core');
-const ytsr = require('ytsr');
-const { google } = require('googleapis');
-
-const { readableViews, parseDuration } = require('../util');
+import { google, youtube_v3 } from 'googleapis';
+import he from 'he';
+import ytdl from 'ytdl-core';
+import ytsr, { Video } from 'ytsr';
+import { VideoSong } from '../../types';
+import { parseDuration, readableViews } from '../util';
 
 const youtube = google.youtube({
   version: 'v3',
   auth: process.env.YT_API
 });
 
-async function getStreamURL(id) {
+export async function getStreamURL(id: string) {
   const info = await ytdl.getInfo(id);
 
   // MacOS: doesn't support opus audio format
@@ -26,28 +26,46 @@ async function getStreamURL(id) {
   return format.url;
 }
 
-async function ytQuery(options, api = false) {
-  const res = await youtube.search.list({
-    part: 'snippet',
-    fields: 'items(id,snippet(title,channelTitle,thumbnails/default))',
+async function ytQuery(
+  options: Partial<youtube_v3.Params$Resource$Search$List>,
+  api = false
+): Promise<VideoSong[]> {
+  const search = await youtube.search.list({
+    part: ['snippet'],
+    fields: 'items(id/videoId,snippet(title,channelTitle,thumbnails/default))',
     maxResults: 25,
-    type: 'video',
+    type: ['video'],
     ...options
   });
 
-  const videos = res.data.items.map(item => ({
-    id: item.id.videoId,
-    title: he.decode(item.snippet.title),
-    artist: item.snippet.channelTitle,
-    thumbnail: item.snippet.thumbnails.default
+  const { items } = search.data;
+  if (items == null) {
+    return [];
+  }
+
+  const videos = items.map(item => ({
+    id: item.id!.videoId!,
+    title: he.decode(item.snippet!.title!),
+    artist: item.snippet!.channelTitle!,
+    thumbnail: {
+      width: item.snippet!.thumbnails!.default!.width!,
+      height: item.snippet!.thumbnails!.default!.height!,
+      url: item.snippet!.thumbnails!.default!.url!
+    }
   }));
 
   if (api) {
-    const res2 = await youtube.videos.list({
-      part: 'contentDetails,statistics',
+    const res = await youtube.videos.list({
+      part: ['contentDetails,statistics'],
       fields: 'items(contentDetails/duration, statistics/viewCount)',
-      id: videos.map(v => v.id).join(',')
+      id: [videos.map(v => v.id).join(',')]
     });
+
+    const videoItems = res.data.items;
+
+    if (videoItems == null) {
+      return [];
+    }
 
     return videos.map((v, i) => ({
       ...v,
@@ -55,8 +73,8 @@ async function ytQuery(options, api = false) {
       date: Date.now(),
       source: 'YOUTUBE',
       url: v.id,
-      duration: parseDuration(res2.data.items[i].contentDetails.duration),
-      views: readableViews(Number(res2.data.items[i].statistics.viewCount) || 0)
+      duration: parseDuration(videoItems[i].contentDetails!.duration!),
+      views: readableViews(Number(videoItems[i].statistics!.viewCount) || 0)
     }));
   }
 
@@ -69,14 +87,14 @@ async function ytQuery(options, api = false) {
     date: Date.now(),
     source: 'YOUTUBE',
     url: v.id,
-    duration: infos[i].videoDetails.lengthSeconds,
+    duration: Number(infos[i].videoDetails.lengthSeconds) || 0,
     views: readableViews(
       Number(infos[i].player_response.videoDetails.viewCount) || 0
     )
   }));
 }
 
-async function ytSearch(keyword, api = false) {
+export async function ytSearch(keyword: string, api = false) {
   if (api) {
     return ytQuery(
       {
@@ -88,8 +106,8 @@ async function ytSearch(keyword, api = false) {
 
   // Alternative using ytsr
   const filters = await ytsr.getFilters(keyword);
-  const filter = filters.get('Type').get('Video');
-  if (filter == null) {
+  const filter = filters.get('Type')?.get('Video');
+  if (filter?.url == null) {
     return [];
   }
 
@@ -97,45 +115,50 @@ async function ytSearch(keyword, api = false) {
     limit: 25
   });
 
-  const ids = new Set();
-  const promises = search.items.map(async item => {
-    const id = item.url.substr(item.url.lastIndexOf('=') + 1);
+  const ids = new Map<string, Video>();
+  for (const item of search.items) {
+    const video = item as Video;
+    const id = video.url.substr(video.url.lastIndexOf('=') + 1);
 
     // Videos can appear more than once, remove duplicates based on video id
-    if (ids.has(id)) return;
-    ids.add(id);
-
-    const info = await ytdl.getBasicInfo(id);
-
-    if (info.videoDetails.lengthSeconds === 0) {
-      // Probably a live stream
-      return;
+    if (!ids.has(id)) {
+      ids.set(id, video);
     }
+  }
+
+  const videos = Array.from(ids.entries());
+  const songs = videos.map(async ([id, item]) => {
+    const info = await ytdl.getBasicInfo(id);
 
     // This should be guaranteed to work
     const views = readableViews(
       Number(info.player_response.videoDetails.viewCount) || 0
     );
 
-    return {
+    const song = {
       id,
       title: he.decode(item.title),
-      artist: item.author.name,
-      thumbnail: item.bestThumbnail,
+      artist: item.author?.name ?? '',
+      thumbnail: {
+        url: item.bestThumbnail.url ?? '',
+        width: item.bestThumbnail.width,
+        height: item.bestThumbnail.height
+      },
       playlists: [],
       date: Date.now(),
       source: 'YOUTUBE',
       url: info.videoDetails.videoId,
-      duration: info.videoDetails.lengthSeconds,
+      duration: Number(info.videoDetails.lengthSeconds),
       views
     };
+
+    return song;
   });
 
-  const videosongs = await Promise.all(promises);
-  return videosongs.filter(Boolean);
+  return Promise.all(songs);
 }
 
-async function getRelatedVideos(id, api = false) {
+export async function getRelatedVideos(id: string, api = false) {
   if (api) {
     return ytQuery(
       {
@@ -148,33 +171,32 @@ async function getRelatedVideos(id, api = false) {
   // Alternative using ytdl
   const { related_videos } = await ytdl.getBasicInfo(id);
 
-  const nonLiveVideos = related_videos.filter(v => v.length_seconds > 0);
-
   // related_videos has nearly almost enough information to fill out a VideoSong
   // There are two missing parts:
   // - The thumbnail only has the url, but we don't need the dimensions to display it properly
   // - The viewcount sometimes will be formed like "12M" or "53K"
   // This is faster than having to do another getBasicInfo() to get the proper view count
 
-  return nonLiveVideos.map(v => {
-    let views = Number(v.view_count.replace(/,/g, ''));
+  return related_videos.map(v => {
+    const viewCount = v.view_count ?? '';
+    let views = Number(viewCount.replace(/,/g, ''));
     if (!views) {
-      const size = v.view_count[v.view_count.length - 1];
-      views = parseFloat(v.view_count) || 0; // parseInt will parse as much of the string unlike Number
+      const size = viewCount[viewCount.length - 1];
+      views = parseFloat(viewCount) || 0; // parseInt will parse as much of the string unlike Number
       if (size === 'B') views *= 1e9;
       else if (size === 'M') views *= 1e6;
       else if (size === 'K') views *= 1e3;
     }
 
     return {
-      id: v.id,
-      title: v.title,
-      artist: v.author.name,
-      duration: v.length_seconds,
+      id: v.id ?? '',
+      title: v.title ?? '',
+      artist: typeof v.author === 'string' ? v.author : v.author.name,
+      duration: v.length_seconds ?? 0,
       playlists: [],
       date: Date.now(),
       source: 'YOUTUBE',
-      url: v.id,
+      url: v.id ?? '',
       views: readableViews(views || 0),
       thumbnail: {
         url: v.thumbnails[0]?.url ?? '',
@@ -184,9 +206,3 @@ async function getRelatedVideos(id, api = false) {
     };
   });
 }
-
-module.exports = {
-  getStreamURL,
-  ytSearch,
-  getRelatedVideos
-};
