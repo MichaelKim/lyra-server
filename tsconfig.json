@@ -6,7 +6,9 @@
     "isolatedModules": true,
     "module": "CommonJS",
     "strict": true,
-    "target": "esnext"
+    "target": "esnext",
+    "outDir": "dist"
   },
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

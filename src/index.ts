@@ -4,6 +4,7 @@ if (!process.env.YT_API) throw 'Missing YouTube API key!';
 
 import express, { NextFunction, Request, Response } from 'express';
 import comp from 'compression';
+import routes from './routes';
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(__dirname + '/public'));
 
-app.use('/', require('./routes'));
+app.use('/', routes);
 
 // Unknown route
 app.use('/*', (req, res) => {

@@ -2,11 +2,10 @@
   "name": "lyra-server",
   "version": "1.0.0",
   "description": "Server for Lyra",
-  "main": "index.ts",
   "scripts": {
-    "dev": "ts-node-dev index.ts",
-    "build": "tsc",
-    "serve": "NODE_ENV=production node dist/index.js"
+    "dev": "ts-node-dev src/index.ts",
+    "tsc": "tsc",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
