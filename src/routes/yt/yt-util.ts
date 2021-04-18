@@ -43,16 +43,23 @@ async function ytQuery(
     return [];
   }
 
-  const videos = items.map(item => ({
-    id: item.id!.videoId!,
-    title: he.decode(item.snippet!.title!),
-    artist: item.snippet!.channelTitle!,
-    thumbnail: {
-      width: item.snippet!.thumbnails!.default!.width!,
-      height: item.snippet!.thumbnails!.default!.height!,
-      url: item.snippet!.thumbnails!.default!.url!
-    }
-  }));
+  const videos = items.flatMap(item => {
+    const id = item.id?.videoId;
+    const title = item.snippet?.title;
+
+    if (id == null || title == null) return [];
+
+    return {
+      id,
+      title,
+      artist: item.snippet?.channelTitle ?? '',
+      thumbnail: {
+        width: item.snippet?.thumbnails?.default?.width ?? 640,
+        height: item.snippet?.thumbnails?.default?.height ?? 480,
+        url: item.snippet?.thumbnails?.default?.url ?? ''
+      }
+    };
+  });
 
   if (api) {
     const res = await youtube.videos.list({
@@ -73,8 +80,8 @@ async function ytQuery(
       date: Date.now(),
       source: 'YOUTUBE',
       url: v.id,
-      duration: parseDuration(videoItems[i].contentDetails!.duration!),
-      views: readableViews(Number(videoItems[i].statistics!.viewCount) || 0)
+      duration: parseDuration(videoItems[i].contentDetails?.duration ?? ''),
+      views: readableViews(Number(videoItems[i].statistics?.viewCount ?? 0))
     }));
   }
 
