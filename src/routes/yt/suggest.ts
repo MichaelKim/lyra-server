@@ -16,7 +16,7 @@ const YT_SUGGEST_URL =
 async function ytSuggest(query: string, api = false) {
   if (!query) return [];
 
-  const url = YT_SUGGEST_URL + query.trim().replace(/\s+/, '+');
+  const url = YT_SUGGEST_URL + encodeURI(query.trim().replace(/\s+/, '+'));
 
   // Format: [query: string, suggestions: string[]]
   const res = await fetch(url);
