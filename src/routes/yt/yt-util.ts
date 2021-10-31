@@ -136,33 +136,22 @@ export async function ytSearch(
   }
 
   const videos = Array.from(ids.entries());
-  const songs = videos.map(async ([id, item]) => {
-    const info = await ytdl.getBasicInfo(id);
-
-    // This should be guaranteed to work
-    const views = readableViews(
-      Number(info.player_response.videoDetails.viewCount) || 0
-    );
-
-    const song: VideoSong = {
-      id,
-      title: item.title,
-      artist: item.author?.name ?? '',
-      thumbnail: {
-        url: item.bestThumbnail.url ?? '',
-        width: item.bestThumbnail.width,
-        height: item.bestThumbnail.height
-      },
-      playlists: [],
-      date: Date.now(),
-      source: 'YOUTUBE',
-      url: info.videoDetails.videoId,
-      duration: Number(info.videoDetails.lengthSeconds),
-      views
-    };
-
-    return song;
-  });
+  const songs = videos.map<Promise<VideoSong>>(async ([id, item]) => ({
+    id,
+    title: item.title,
+    artist: item.author?.name ?? '',
+    thumbnail: {
+      url: item.bestThumbnail.url ?? '',
+      width: item.bestThumbnail.width,
+      height: item.bestThumbnail.height
+    },
+    playlists: [],
+    date: Date.now(),
+    source: 'YOUTUBE',
+    url: id,
+    duration: parseReadableDuration(item.duration),
+    views: readableViews(item.views ?? 0)
+  }));
 
   return Promise.all(songs);
 }
