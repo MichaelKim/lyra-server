@@ -5,7 +5,7 @@
 // - JSON string of string[] (suggestions)
 
 import express from 'express';
-import fetch from 'node-fetch';
+import https from 'https';
 import { Request } from '../../types';
 
 const router = express.Router();
@@ -13,14 +13,29 @@ const router = express.Router();
 const YT_SUGGEST_URL =
   'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=';
 
+async function fetchSuggestions(url: string) {
+  return new Promise<[string, string[]]>(resolve => {
+    https.get(url, res => {
+      let data = '';
+      res.on('data', chunk => (data += chunk));
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch {
+          resolve(['', []]);
+        }
+      });
+    });
+  });
+}
+
 async function ytSuggest(query: string, api = false) {
   if (!query) return [];
 
   const url = YT_SUGGEST_URL + encodeURI(query.trim().replace(/\s+/, '+'));
 
   // Format: [query: string, suggestions: string[]]
-  const res = await fetch(url);
-  const body = await res.json();
+  const body = await fetchSuggestions(url);
 
   return body[1];
 }

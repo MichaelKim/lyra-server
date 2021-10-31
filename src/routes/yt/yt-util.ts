@@ -1,9 +1,8 @@
 import { google, youtube_v3 } from 'googleapis';
-import he from 'he';
 import ytdl from 'ytdl-core';
 import ytsr, { Video } from 'ytsr';
 import { VideoSong } from '../../types';
-import { parseDuration, readableViews } from '../util';
+import { parseDuration, parseReadableDuration, readableViews } from '../util';
 
 const youtube = google.youtube({
   version: 'v3',
@@ -101,7 +100,10 @@ async function ytQuery(
   }));
 }
 
-export async function ytSearch(keyword: string, api = false) {
+export async function ytSearch(
+  keyword: string,
+  api = false
+): Promise<VideoSong[]> {
   if (api) {
     return ytQuery(
       {
@@ -142,9 +144,9 @@ export async function ytSearch(keyword: string, api = false) {
       Number(info.player_response.videoDetails.viewCount) || 0
     );
 
-    const song = {
+    const song: VideoSong = {
       id,
-      title: he.decode(item.title),
+      title: item.title,
       artist: item.author?.name ?? '',
       thumbnail: {
         url: item.bestThumbnail.url ?? '',
