@@ -1,6 +1,6 @@
 import { Request as Req } from 'express';
 
-export type Request<Query> = Req<{}, {}, {}, Partial<Query>>;
+export type Request<Query, Body = {}> = Req<{}, {}, Body, Partial<Query>>;
 
 type SongID = string;
 type PlaylistID = string;
@@ -25,4 +25,14 @@ export interface VideoSong extends SongShared {
   source: 'YOUTUBE';
   url: SongID;
   views: string; // Readable view count
+}
+
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      username: string;
+      password: string;
+    }
+  }
 }

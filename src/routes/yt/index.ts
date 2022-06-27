@@ -6,9 +6,9 @@ import url from './url';
 
 const router = express.Router();
 
-router.use('/url', url);
-router.use('/search', search);
 router.use('/related', related);
+router.use('/search', search);
 router.use('/suggest', suggest);
+router.use('/url', url);
 
 export default router;
